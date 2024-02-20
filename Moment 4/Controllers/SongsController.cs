@@ -76,8 +76,24 @@ namespace Moment_4.Controllers
         // POST: api/Songs
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Song>> PostSong(Song song)
+        public async Task<ActionResult<Song>> PostSong(Song song, [FromForm] IFormFile imageFile)
         {
+            //kontrollerar att det finns en fil som har blivit uppladdad
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                //Genererar unik filpath, lik den för laravel för att sedan spara den i wwwrootes/images. Unika koden genereras mha GUID, och ersätter original bildens namn.
+
+
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
+                
+                using (var stream = new FileStream(imagePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                    song.ImageFilePath = imagePath; // Set the file path on the song object
+                }
+            }
+
+
             _context.Songs.Add(song);
             await _context.SaveChangesAsync();
 
