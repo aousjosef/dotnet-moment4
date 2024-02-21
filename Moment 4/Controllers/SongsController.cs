@@ -147,6 +147,11 @@ namespace Moment_4.Controllers
                 }
             }
 
+            else
+            {
+                song.ImageFilePath = null;
+            }
+
 
             _context.Songs.Add(song);
             await _context.SaveChangesAsync();

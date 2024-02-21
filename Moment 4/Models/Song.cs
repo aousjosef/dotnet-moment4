@@ -12,7 +12,7 @@ namespace Moment_4.Models;
     [Required]
     public string? Name { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Length must be greater than 0")]
+    [Range(1, int.MaxValue, ErrorMessage = "Msg from model. Length must be greater than 0")]
     
     //miniumm 1, max ej definerad
     public int LengthInSeconds { get; set; }
@@ -21,7 +21,7 @@ namespace Moment_4.Models;
 
 
     // Foreign key for Category
-    [Required]
+    
     public int CategoryId { get; set; }
 
     // Navigation property back to Category
