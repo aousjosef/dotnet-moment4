@@ -42,7 +42,7 @@ namespace Moment_4.Controllers
         [HttpPut("{id}")]
         /*OBS Song song och ImageFilePath är vad POST request förväntas tas emot. Dvs två olika inputs. Därför måste song.ImageFilePath = imagePath.
          Ytterligare, så måste [FromForm] användas för att kombinera olika typer av data. Egentligen borde imagefilepath borde vara imagefile.*/
-        public async Task<IActionResult> PutSong(int id, [FromForm] Song song, [FromForm] IFormFile ImageFilePath)
+        public async Task<IActionResult> PutSong(int id, [FromForm] Song song, [FromForm] IFormFile imageFile = null)
         {
 
 
@@ -51,11 +51,20 @@ namespace Moment_4.Controllers
                 return BadRequest("The ID in the URL does not match the ID of the song.");
             }
 
+            //Kontrollerar att kategorin som skickas med song finns i kateogrin tabellen (id), retunerar true/false
+            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == song.CategoryId);
+
+            //Kontrollerar först om song validerar korrekt, senare om kategorin inte finns
+            if (song == null || !categoryExists)
+            {
+                return BadRequest("Invalid categoryId");
+            }
+
             //Hämta låten som har valts, spara data i en var.
             var selectedSongById = await _context.Songs.FindAsync(id);
 
             //kontrollerar att det finns en fil som har blivit uppladdad
-            if (ImageFilePath != null && ImageFilePath.Length > 0)
+            if (imageFile != null && imageFile.Length > 0)
             {
 
                 // Först kontrollerar att selectedSongById.imagefilepath (Directory/GUID.png) är inte tom. Sen kontrollerar (Directory/GUID.png) finns redan i vår server.
@@ -69,11 +78,11 @@ namespace Moment_4.Controllers
 
                 //Genererar unik filpath för den nya uppladdad bilden. Lik den för laravel för att sedan spara den i wwwrootes/images. Unika koden genereras mha GUID, och ersätter original bildens namn.
                 //Path.Combine tar 3 parametrar (1. Directory /var/www/myapp , 2.wwwroot/images , 3. GUID + (jpg,png,svg...)
-                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(ImageFilePath.FileName));
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
 
                 using (var stream = new FileStream(imagePath, FileMode.Create))
                 {
-                    await ImageFilePath.CopyToAsync(stream);
+                    await imageFile.CopyToAsync(stream);
                     selectedSongById.ImageFilePath = imagePath; // Set the file path on the song object
                 }
             }
@@ -118,25 +127,40 @@ namespace Moment_4.Controllers
 
         }
 
+
+
         // POST: api/Songs
 
         /*OBS Song song och ImageFilePath är vad POST request förväntas tas emot. Dvs två olika inputs. Därför måste song.ImageFilePath = imagePath.
             Ytterligare, så måste [FromForm] användas för att kombinera olika typer av data*/
 
         [HttpPost]
-        public async Task<ActionResult<Song>> PostSong([FromForm] Song song, [FromForm] IFormFile ImageFilePath)
+        public async Task<ActionResult<Song>> PostSong([FromForm] Song song, [FromForm] IFormFile imageFile = null)
         {
+
+            //Kontrollerar att kategorin som skickas med song finns i kateogrin tabellen (id), retunerar true/false
+
+            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == song.CategoryId);
+
+            //Kontrollerar först om song validerar korrekt, senare om kategorin inte finns
+
+            if (song == null || !categoryExists)
+            {
+                return BadRequest("Invalid categoryId");
+            }
+
+
             //kontrollerar att det finns en fil som har blivit uppladdad
-            if (ImageFilePath != null && ImageFilePath.Length > 0)
+            if (imageFile != null && imageFile.Length > 0)
             {
                 //Genererar unik filpath, lik den för laravel för att sedan spara den i wwwrootes/images. Unika koden genereras mha GUID, och ersätter original bildens namn.
 
 
-                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(ImageFilePath.FileName));
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
 
                 using (var stream = new FileStream(imagePath, FileMode.Create))
                 {
-                    await ImageFilePath.CopyToAsync(stream);
+                    await imageFile.CopyToAsync(stream);
                     song.ImageFilePath = imagePath; // Set the file path on the song object
                 }
             }
@@ -145,6 +169,7 @@ namespace Moment_4.Controllers
             {
                 song.ImageFilePath = null;
             }
+
 
 
             _context.Songs.Add(song);
@@ -163,10 +188,19 @@ namespace Moment_4.Controllers
                 return NotFound();
             }
 
+            // Först kontrollerar att selectedSongById.imagefilepath (Directory/GUID.png) är inte tom. Sen kontrollerar (Directory/GUID.png) finns redan i vår server.
+            if (!string.IsNullOrEmpty(song.ImageFilePath) && System.IO.File.Exists(song.ImageFilePath))
+            {
+                //Om true, raderas bilden enlign nedan.
+
+                System.IO.File.Delete(song.ImageFilePath);
+            }
+
+
             _context.Songs.Remove(song);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok($"song with the name of {song.Name} has been deleted!");
         }
 
         private bool SongExists(int id)
