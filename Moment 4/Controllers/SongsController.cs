@@ -183,10 +183,19 @@ namespace Moment_4.Controllers
                 return NotFound();
             }
 
+            // Först kontrollerar att selectedSongById.imagefilepath (Directory/GUID.png) är inte tom. Sen kontrollerar (Directory/GUID.png) finns redan i vår server.
+            if (!string.IsNullOrEmpty(song.ImageFilePath) && System.IO.File.Exists(song.ImageFilePath))
+            {
+                //Om true, raderas bilden enlign nedan.
+
+                System.IO.File.Delete(song.ImageFilePath);
+            }
+
+
             _context.Songs.Remove(song);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok($"song with the name of {song.Name} has been deleted!");
         }
 
         private bool SongExists(int id)
