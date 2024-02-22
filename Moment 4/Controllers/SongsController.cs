@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using Moment_4.Data;
 using Moment_4.Models;
 
@@ -139,7 +133,7 @@ namespace Moment_4.Controllers
 
 
                 var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(ImageFilePath.FileName));
-                
+
                 using (var stream = new FileStream(imagePath, FileMode.Create))
                 {
                     await ImageFilePath.CopyToAsync(stream);
