@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using Moment_4.Data;
 using Moment_4.Models;
 
@@ -48,7 +42,7 @@ namespace Moment_4.Controllers
         [HttpPut("{id}")]
         /*OBS Song song och ImageFilePath är vad POST request förväntas tas emot. Dvs två olika inputs. Därför måste song.ImageFilePath = imagePath.
          Ytterligare, så måste [FromForm] användas för att kombinera olika typer av data. Egentligen borde imagefilepath borde vara imagefile.*/
-        public async Task<IActionResult> PutSong(int id, [FromForm] Song song, [FromForm] IFormFile ImageFilePath)
+        public async Task<IActionResult> PutSong(int id, [FromForm] Song song, [FromForm] IFormFile imageFile)
         {
 
 
@@ -61,7 +55,7 @@ namespace Moment_4.Controllers
             var selectedSongById = await _context.Songs.FindAsync(id);
 
             //kontrollerar att det finns en fil som har blivit uppladdad
-            if (ImageFilePath != null && ImageFilePath.Length > 0)
+            if (imageFile != null && imageFile.Length > 0)
             {
 
                 // Först kontrollerar att selectedSongById.imagefilepath (Directory/GUID.png) är inte tom. Sen kontrollerar (Directory/GUID.png) finns redan i vår server.
@@ -75,11 +69,11 @@ namespace Moment_4.Controllers
 
                 //Genererar unik filpath för den nya uppladdad bilden. Lik den för laravel för att sedan spara den i wwwrootes/images. Unika koden genereras mha GUID, och ersätter original bildens namn.
                 //Path.Combine tar 3 parametrar (1. Directory /var/www/myapp , 2.wwwroot/images , 3. GUID + (jpg,png,svg...)
-                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(ImageFilePath.FileName));
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
 
                 using (var stream = new FileStream(imagePath, FileMode.Create))
                 {
-                    await ImageFilePath.CopyToAsync(stream);
+                    await imageFile.CopyToAsync(stream);
                     selectedSongById.ImageFilePath = imagePath; // Set the file path on the song object
                 }
             }
@@ -130,22 +124,33 @@ namespace Moment_4.Controllers
             Ytterligare, så måste [FromForm] användas för att kombinera olika typer av data*/
 
         [HttpPost]
-        public async Task<ActionResult<Song>> PostSong([FromForm] Song song, [FromForm] IFormFile ImageFilePath)
+        public async Task<ActionResult<Song>> PostSong([FromForm] Song song, [FromForm] IFormFile imageFile)
         {
+
+            //Kontrollerar att kategorin existerar
+            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == song.CategoryId);
+
+            //Kontrollerar först om song validerar korrekt, senare om kategorin inte finns
+            if (song == null || !categoryExists)
+            {
+                return BadRequest("Invalid categoryId");
+            }
+
             //kontrollerar att det finns en fil som har blivit uppladdad
-            if (ImageFilePath != null && ImageFilePath.Length > 0)
+            if (imageFile != null && imageFile.Length > 0)
             {
                 //Genererar unik filpath, lik den för laravel för att sedan spara den i wwwrootes/images. Unika koden genereras mha GUID, och ersätter original bildens namn.
 
 
-                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(ImageFilePath.FileName));
-                
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
+
                 using (var stream = new FileStream(imagePath, FileMode.Create))
                 {
-                    await ImageFilePath.CopyToAsync(stream);
+                    await imageFile.CopyToAsync(stream);
                     song.ImageFilePath = imagePath; // Set the file path on the song object
                 }
             }
+
 
 
             _context.Songs.Add(song);
