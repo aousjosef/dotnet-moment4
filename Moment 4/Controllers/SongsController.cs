@@ -140,11 +140,11 @@ namespace Moment_4.Controllers
 
             //Kontrollerar att kategorin som skickas med song finns i kateogrin tabellen (id), retunerar true/false
 
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == song.CategoryId);
+            //var categoryExists = await _context.Categories.AnyAsync(c => c.Id == song.CategoryId);
 
             //Kontrollerar först om song validerar korrekt, senare om kategorin inte finns
 
-            if (song == null || !categoryExists)
+            if (song == null)
             {
                 return BadRequest("Invalid categoryId");
             }

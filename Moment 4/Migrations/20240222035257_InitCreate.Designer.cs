@@ -10,7 +10,7 @@ using Moment_4.Data;
 namespace Moment_4.Migrations
 {
     [DbContext(typeof(MainContext))]
-    [Migration("20240220043747_InitCreate")]
+    [Migration("20240222035257_InitCreate")]
     partial class InitCreate
     {
         /// <inheritdoc />
@@ -26,6 +26,7 @@ namespace Moment_4.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

@@ -2,9 +2,9 @@
 
 namespace Moment_4.Models;
 
-    public class Song
+public class Song
 
-    {
+{
 
     public int Id { get; set; }
 
@@ -13,7 +13,7 @@ namespace Moment_4.Models;
     public string? Name { get; set; }
 
     [Range(1, int.MaxValue, ErrorMessage = "Msg from model. Length must be greater than 0")]
-    
+
     //miniumm 1, max ej definerad
     public int LengthInSeconds { get; set; }
 
@@ -21,11 +21,11 @@ namespace Moment_4.Models;
 
 
     // Foreign key for Category
-    
-    public int CategoryId { get; set; }
+
+    public int? CategoryId { get; set; }
 
     // Navigation property back to Category
-    
+
     public Category? Category { get; set; }
 
 }
