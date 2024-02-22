@@ -42,13 +42,22 @@ namespace Moment_4.Controllers
         [HttpPut("{id}")]
         /*OBS Song song och ImageFilePath är vad POST request förväntas tas emot. Dvs två olika inputs. Därför måste song.ImageFilePath = imagePath.
          Ytterligare, så måste [FromForm] användas för att kombinera olika typer av data. Egentligen borde imagefilepath borde vara imagefile.*/
-        public async Task<IActionResult> PutSong(int id, [FromForm] Song song, [FromForm] IFormFile imageFile)
+        public async Task<IActionResult> PutSong(int id, [FromForm] Song song, [FromForm] IFormFile imageFile = null)
         {
 
 
             if (id != song.Id)
             {
                 return BadRequest("The ID in the URL does not match the ID of the song.");
+            }
+
+            //Kontrollerar att kategorin som skickas med song finns i kateogrin tabellen (id), retunerar true/false
+            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == song.CategoryId);
+
+            //Kontrollerar först om song validerar korrekt, senare om kategorin inte finns
+            if (song == null || !categoryExists)
+            {
+                return BadRequest("Invalid categoryId");
             }
 
             //Hämta låten som har valts, spara data i en var.
@@ -118,23 +127,28 @@ namespace Moment_4.Controllers
 
         }
 
+
+
         // POST: api/Songs
 
         /*OBS Song song och ImageFilePath är vad POST request förväntas tas emot. Dvs två olika inputs. Därför måste song.ImageFilePath = imagePath.
             Ytterligare, så måste [FromForm] användas för att kombinera olika typer av data*/
 
         [HttpPost]
-        public async Task<ActionResult<Song>> PostSong([FromForm] Song song, [FromForm] IFormFile imageFile)
+        public async Task<ActionResult<Song>> PostSong([FromForm] Song song, [FromForm] IFormFile imageFile = null)
         {
 
-            //Kontrollerar att kategorin existerar
+            //Kontrollerar att kategorin som skickas med song finns i kateogrin tabellen (id), retunerar true/false
+
             var categoryExists = await _context.Categories.AnyAsync(c => c.Id == song.CategoryId);
 
             //Kontrollerar först om song validerar korrekt, senare om kategorin inte finns
+
             if (song == null || !categoryExists)
             {
                 return BadRequest("Invalid categoryId");
             }
+
 
             //kontrollerar att det finns en fil som har blivit uppladdad
             if (imageFile != null && imageFile.Length > 0)
