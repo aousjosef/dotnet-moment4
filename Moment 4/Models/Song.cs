@@ -22,7 +22,7 @@ public class Song
 
     // Foreign key for Category
 
-    public int? CategoryId { get; set; }
+    public int CategoryId { get; set; }
 
     // Navigation property back to Category
 
